@@ -187,7 +187,6 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </nav>
 
-<!-- WEDDING -->
 <div class="page active" id="page-wedding">
   <div class="page-header wedding-bg">
     <h1>Wedding Guest List</h1>
@@ -222,8 +221,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="w-name-err">Name is required</span>
         </div>
         <div class="fg">
-          <label>Number of People</label>
-          <input type="number" id="w-count" min="0" placeholder="Enter number"/>
+          <label>Number of People <span style="color:var(--rose-dark)">*</span></label>
+          <input type="number" id="w-count" min="1" placeholder="e.g. 4"/>
+          <span class="field-error" id="w-count-err">Number of people is required</span>
         </div>
       </div>
       <div class="form-actions">
@@ -246,7 +246,6 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
-<!-- HOMECOMING -->
 <div class="page" id="page-homecoming">
   <div class="page-header homecoming-bg">
     <h1>Homecoming Guest List</h1>
@@ -281,8 +280,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="h-name-err">Name is required</span>
         </div>
         <div class="fg">
-          <label>Number of People</label>
-          <input type="number" id="h-count" min="0" placeholder="Enter number"/>
+          <label>Number of People <span style="color:var(--rose-dark)">*</span></label>
+          <input type="number" id="h-count" min="1" placeholder="e.g. 2"/>
+          <span class="field-error" id="h-count-err">Number of people is required</span>
         </div>
       </div>
       <div class="form-actions">
@@ -305,7 +305,6 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
-<!-- TABLE PLAN -->
 <div class="page" id="page-tables">
   <div class="page-header tables-bg">
     <h1>Table Seating Plan</h1>
@@ -342,8 +341,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="t-name-err">Table name is required</span>
         </div>
         <div class="fg">
-          <label>Number of Seats</label>
-          <input type="number" id="t-seats-input" min="0" placeholder="Enter number"/>
+          <label>Number of Seats <span style="color:var(--rose-dark)">*</span></label>
+          <input type="number" id="t-seats-input" min="1" placeholder="e.g. 8"/>
+          <span class="field-error" id="t-seats-err">Number of seats is required</span>
         </div>
       </div>
       <div class="form-actions">
@@ -366,7 +366,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 <script>
 // ══ STATE ══
 const KW='wp_w3',KH='wp_h3',KT='wp_t3';
-let wGuests=[],hGuests=[],tables=[];
+let wGuests=[],hGuests=[],tables[];
 function load(){
   wGuests=JSON.parse(localStorage.getItem(KW)||'[]');
   hGuests=JSON.parse(localStorage.getItem(KH)||'[]');
@@ -417,21 +417,22 @@ function toast(msg,type='success'){
   toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
-// ══ VALIDATION ══
-function validateName(inputId,errId){
-  const el=document.getElementById(inputId);
-  const err=document.getElementById(errId);
-  const val=el.value.trim();
-  if(!val){
+// ══ MULTI-FIELD VALIDATION ══
+function validateField(inputId, errId) {
+  const el = document.getElementById(inputId);
+  const err = document.getElementById(errId);
+  const val = el.value.trim();
+  
+  if (!val || (el.type === 'number' && parseInt(val) < 1)) {
     el.classList.add('error');
     err.classList.add('show');
-    el.focus();
     return false;
   }
   el.classList.remove('error');
   err.classList.remove('show');
   return true;
 }
+
 function clearError(inputId,errId){
   document.getElementById(inputId).classList.remove('error');
   document.getElementById(errId).classList.remove('show');
@@ -441,13 +442,25 @@ function clearError(inputId,errId){
 function addGuest(event){
   const isW=(event==='wedding');
   const nameId=isW?'w-name':'h-name';
-  const errId=isW?'w-name-err':'h-name-err';
+  const nameErrId=isW?'w-name-err':'h-name-err';
   const cntId=isW?'w-count':'h-count';
-  if(!validateName(nameId,errId))return;
+  const cntErrId=isW?'w-count-err':'h-count-err';
+  
+  // Validate both fields independently so both errors can show up
+  const isNameValid = validateField(nameId, nameErrId);
+  const isCountValid = validateField(cntId, cntErrId);
+  
+  if (!isNameValid || !isCountValid) {
+    if (!isNameValid) document.getElementById(nameId).focus();
+    else document.getElementById(cntId).focus();
+    return;
+  }
+
   const nameEl=document.getElementById(nameId);
   const cntEl=document.getElementById(cntId);
   const name=capWords(nameEl.value);
-  const count=parseInt(cntEl.value)||0;
+  const count=parseInt(cntEl.value);
+  
   const list=isW?wGuests:hGuests;
   list.push({id:uid(),name,count});
   save();
@@ -483,6 +496,10 @@ function startEdit(event,id){
 function saveEdit(event,id){
   const inp=document.getElementById('inp-'+id);
   const newCount=parseInt(inp.value)||0;
+  if(newCount < 1) {
+    toast('Count must be at least 1','error');
+    return;
+  }
   const list=event==='wedding'?wGuests:hGuests;
   const g=list.find(x=>x.id===id);if(!g)return;
   g.count=newCount;
@@ -521,7 +538,7 @@ function renderGuests(event){
       <td style="font-weight:500">${esc(g.name)}${tblBadge}</td>
       <td><div class="count-cell">
         <span class="badge ${bc}" id="disp-${g.id}">${g.count}</span>
-        <input class="count-edit" type="number" min="0" id="inp-${g.id}" value="${g.count}"
+        <input class="count-edit" type="number" min="1" id="inp-${g.id}" value="${g.count}"
           onkeydown="if(event.key==='Enter')saveEdit('${event}',${g.id});if(event.key==='Escape')cancelEdit('${event}',${g.id})"/>
       </div></td>
       <td><div style="display:flex;gap:5px;align-items:center">
@@ -543,11 +560,20 @@ function renderGuests(event){
 
 // ══ ADD TABLE ══
 function addTable(){
-  if(!validateName('t-name','t-name-err'))return;
+  const isNameValid = validateField('t-name', 't-name-err');
+  const isSeatsValid = validateField('t-seats-input', 't-seats-err');
+  
+  if (!isNameValid || !isSeatsValid) {
+    if (!isNameValid) document.getElementById('t-name').focus();
+    else document.getElementById('t-seats-input').focus();
+    return;
+  }
+
   const nameEl=document.getElementById('t-name');
   const seatsEl=document.getElementById('t-seats-input');
   const name=capWords(nameEl.value);
-  const seats=parseInt(seatsEl.value)||0;
+  const seats=parseInt(seatsEl.value);
+  
   tables.push({id:uid(),name,seats,guests:[]});
   save();
   nameEl.value='';seatsEl.value='';
@@ -631,7 +657,6 @@ function renderTables(){
 
 // ══════════════════════════════════════════════
 // PDF / PRINT — pure HTML blob approach
-// Works on all browsers including mobile, no CSP issues
 // ══════════════════════════════════════════════
 function buildPDFHtml(type){
   const now=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
@@ -778,9 +803,11 @@ function buildPDFHtml(type){
     .header-bar{background:${accentColor};height:5px;margin:-28px -24px 24px}
     .doc-title{font-size:1.75rem;font-weight:700;color:#2A2A2A;margin-bottom:4px}
     .doc-sub{font-size:0.85rem;color:#888;margin-bottom:4px}
+    .doc-title{font-size:1.75rem;font-weight:700;color:#2A2A2A;margin-bottom:4px}
+    .doc-sub{font-size:0.85rem;color:#888;margin-bottom:4px}
     .doc-date{font-size:0.78rem;color:#bbb}
     .header-divider{height:1px;background:#e8e4de;margin:20px 0 24px}
-    .print-btn-bar{display:flex;gap:10px;margin-bottom:24px}
+    .print-btn-bar no-print{display:flex;gap:10px;margin-bottom:24px}
     .print-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:20px;font-size:0.84rem;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;font-family:inherit}
     .btn-dl{background:${accentColor};color:#fff}
     .btn-dl:hover{opacity:0.88}
@@ -829,7 +856,6 @@ function printPDF(type){
   win.document.write(html);
   win.document.close();
   win.focus();
-  // Delay to let HTML render before print dialog
   setTimeout(()=>{try{win.print();}catch(e){}},600);
 }
 
@@ -837,14 +863,20 @@ function printPDF(type){
 ['w-name','w-count'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addGuest('wedding')}));
 ['h-name','h-count'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addGuest('homecoming')}));
 ['t-name','t-seats-input'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addTable()}));
+
 ['w-name','h-name','t-name'].forEach(id=>{
   const el=document.getElementById(id);
   el.addEventListener('input',()=>{if(el.value.length===1)el.value=el.value.toUpperCase();});
   el.addEventListener('blur',()=>{if(el.value.trim())el.value=capWords(el.value);});
 });
+
+// Clear validation flags dynamically as user fixes mistakes
 document.getElementById('w-name').addEventListener('input',()=>clearError('w-name','w-name-err'));
+document.getElementById('w-count').addEventListener('input',()=>clearError('w-count','w-count-err'));
 document.getElementById('h-name').addEventListener('input',()=>clearError('h-name','h-name-err'));
+document.getElementById('h-count').addEventListener('input',()=>clearError('h-count','h-count-err'));
 document.getElementById('t-name').addEventListener('input',()=>clearError('t-name','t-name-err'));
+document.getElementById('t-seats-input').addEventListener('input',()=>clearError('t-seats-input','t-seats-err'));
 
 // ══ INIT ══
 renderGuests('wedding');
