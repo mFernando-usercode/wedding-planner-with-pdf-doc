@@ -154,6 +154,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .toast.t-success .ti{color:#7CC87C}
 .toast.t-error .ti{color:#E87575}
 .toast-icon{font-weight:700;font-size:1rem}
+
+/* ── PRINT PDF WINDOW STYLES ── */
+#pdf-frame{display:none}
 </style>
 </head>
 <body>
@@ -218,9 +221,8 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="w-name-err">Name is required</span>
         </div>
         <div class="fg">
-          <label>Number of People <span style="color:var(--rose-dark)">*</span></label>
-          <input type="number" id="w-count" min="1" placeholder="e.g. 4"/>
-          <span class="field-error" id="w-count-err">Number of people is required</span>
+          <label>Number of People</label>
+          <input type="number" id="w-count" min="0" placeholder="Enter number"/>
         </div>
       </div>
       <div class="form-actions">
@@ -277,9 +279,8 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="h-name-err">Name is required</span>
         </div>
         <div class="fg">
-          <label>Number of People <span style="color:var(--rose-dark)">*</span></label>
-          <input type="number" id="h-count" min="1" placeholder="e.g. 2"/>
-          <span class="field-error" id="h-count-err">Number of people is required</span>
+          <label>Number of People</label>
+          <input type="number" id="h-count" min="0" placeholder="Enter number"/>
         </div>
       </div>
       <div class="form-actions">
@@ -338,9 +339,8 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="t-name-err">Table name is required</span>
         </div>
         <div class="fg">
-          <label>Number of Seats <span style="color:var(--rose-dark)">*</span></label>
-          <input type="number" id="t-seats-input" min="1" placeholder="e.g. 8"/>
-          <span class="field-error" id="t-seats-err">Number of seats is required</span>
+          <label>Number of Seats</label>
+          <input type="number" id="t-seats-input" min="0" placeholder="Enter number"/>
         </div>
       </div>
       <div class="form-actions">
@@ -364,6 +364,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 // ══ STATE ══
 const KW='wp_w3',KH='wp_h3',KT='wp_t3';
 let wGuests=[],hGuests=[],tables[];
+
 function load(){
   wGuests=JSON.parse(localStorage.getItem(KW)||'[]');
   hGuests=JSON.parse(localStorage.getItem(KH)||'[]');
@@ -380,7 +381,7 @@ load();
 function capWords(s){return s.trim().split(/\s+/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sortArr(arr){return [...arr].sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'}))}
-function uid(){return Date.now()+Math.floor(Math.random()*99999)}
+function uid(){return 'id_' + Date.now() + '_' + Math.floor(Math.random()*99999)}
 function wTotal(){return wGuests.reduce((s,g)=>s+Number(g.count),0)}
 function hTotal(){return hGuests.reduce((s,g)=>s+Number(g.count),0)}
 function seatedInTable(tbl){return tbl.guests.reduce((s,gid)=>{const g=hGuests.find(x=>x.id===gid);return s+Number(g?g.count:0)},0)}
@@ -414,22 +415,21 @@ function toast(msg,type='success'){
   toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
-// ══ MULTI-FIELD VALIDATION ══
-function validateField(inputId, errId) {
-  const el = document.getElementById(inputId);
-  const err = document.getElementById(errId);
-  const val = el.value.trim();
-  
-  if (!val || (el.type === 'number' && parseInt(val) < 1)) {
+// ══ VALIDATION ══
+function validateName(inputId,errId){
+  const el=document.getElementById(inputId);
+  const err=document.getElementById(errId);
+  const val=el.value.trim();
+  if(!val){
     el.classList.add('error');
     err.classList.add('show');
+    el.focus();
     return false;
   }
   el.classList.remove('error');
   err.classList.remove('show');
   return true;
 }
-
 function clearError(inputId,errId){
   document.getElementById(inputId).classList.remove('error');
   document.getElementById(errId).classList.remove('show');
@@ -439,33 +439,19 @@ function clearError(inputId,errId){
 function addGuest(event){
   const isW=(event==='wedding');
   const nameId=isW?'w-name':'h-name';
-  const nameErrId=isW?'w-name-err':'h-name-err';
+  const errId=isW?'w-name-err':'h-name-err';
   const cntId=isW?'w-count':'h-count';
-  const cntErrId=isW?'w-count-err':'h-count-err';
-  
-  const isNameValid = validateField(nameId, nameErrId);
-  const isCountValid = validateField(cntId, cntErrId);
-  
-  if (!isNameValid || !isCountValid) {
-    if (!isNameValid) document.getElementById(nameId).focus();
-    else document.getElementById(cntId).focus();
-    return;
-  }
-
+  if(!validateName(nameId,errId))return;
   const nameEl=document.getElementById(nameId);
   const cntEl=document.getElementById(cntId);
   const name=capWords(nameEl.value);
-  const count=parseInt(cntEl.value);
-  
+  const count=parseInt(cntEl.value)||0;
   const list=isW?wGuests:hGuests;
   list.push({id:uid(),name,count});
   save();
   nameEl.value='';cntEl.value='';
   renderGuests(event);
   toast(name+' added');
-  
-  // Snap focus instantly back to the name layout field for continuous entry loop
-  nameEl.focus();
 }
 
 // ══ DELETE GUEST ══
@@ -495,10 +481,6 @@ function startEdit(event,id){
 function saveEdit(event,id){
   const inp=document.getElementById('inp-'+id);
   const newCount=parseInt(inp.value)||0;
-  if(newCount < 1) {
-    toast('Count must be at least 1','error');
-    return;
-  }
   const list=event==='wedding'?wGuests:hGuests;
   const g=list.find(x=>x.id===id);if(!g)return;
   g.count=newCount;
@@ -537,20 +519,20 @@ function renderGuests(event){
       <td style="font-weight:500">${esc(g.name)}${tblBadge}</td>
       <td><div class="count-cell">
         <span class="badge ${bc}" id="disp-${g.id}">${g.count}</span>
-        <input class="count-edit" type="number" min="1" id="inp-${g.id}" value="${g.count}"
-          onkeydown="if(event.key==='Enter')saveEdit('${event}',${g.id});if(event.key==='Escape')cancelEdit('${event}',${g.id})"/>
+        <input class="count-edit" type="number" min="0" id="inp-${g.id}" value="${g.count}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault(); saveEdit('${event}','${g.id}');} if(event.key==='Escape'){event.preventDefault(); cancelEdit('${event}','${g.id}');}"/>
       </div></td>
       <td><div style="display:flex;gap:5px;align-items:center">
-        <button class="btn btn-outline btn-sm" onclick="startEdit('${event}',${g.id})" id="edit-btn-${g.id}">
+        <button class="btn btn-outline btn-sm" onclick="startEdit('${event}','${g.id}')" id="edit-btn-${g.id}">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Edit
         </button>
         <div class="edit-btns" id="btns-${g.id}">
-          <button class="btn btn-sage btn-sm" onclick="saveEdit('${event}',${g.id})">Save</button>
-          <button class="btn btn-outline btn-sm" onclick="cancelEdit('${event}',${g.id})">Cancel</button>
+          <button class="btn btn-sage btn-sm" onclick="saveEdit('${event}','${g.id}')">Save</button>
+          <button class="btn btn-outline btn-sm" onclick="cancelEdit('${event}','${g.id}')">Cancel</button>
         </div>
       </div></td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteGuest('${event}',${g.id})">
+      <td><button class="btn btn-danger btn-sm" onclick="deleteGuest('${event}','${g.id}')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>Delete
       </button></td>
     </tr>`;
@@ -559,26 +541,16 @@ function renderGuests(event){
 
 // ══ ADD TABLE ══
 function addTable(){
-  const isNameValid = validateField('t-name', 't-name-err');
-  const isSeatsValid = validateField('t-seats-input', 't-seats-err');
-  
-  if (!isNameValid || !isSeatsValid) {
-    if (!isNameValid) document.getElementById('t-name').focus();
-    else document.getElementById('t-seats-input').focus();
-    return;
-  }
-
+  if(!validateName('t-name','t-name-err'))return;
   const nameEl=document.getElementById('t-name');
   const seatsEl=document.getElementById('t-seats-input');
   const name=capWords(nameEl.value);
-  const seats=parseInt(seatsEl.value);
-  
+  const seats=parseInt(seatsEl.value)||0;
   tables.push({id:uid(),name,seats,guests:[]});
   save();
   nameEl.value='';seatsEl.value='';
   renderTables();
   toast(name+' added');
-  nameEl.focus();
 }
 
 // ══ DELETE TABLE ══
@@ -590,7 +562,7 @@ function deleteTable(id){
 // ══ ASSIGN GUEST ══
 function assignGuest(tableId){
   const sel=document.getElementById('asel-'+tableId);
-  const gid=parseInt(sel.value);
+  const gid=sel.value;
   if(!gid){toast('Please select a guest','error');return;}
   const tbl=tables.find(t=>t.id===tableId);
   const guest=hGuests.find(g=>g.id===gid);
@@ -633,14 +605,14 @@ function renderTables(){
     const fillCls=pct>=100?'bar-full':pct>=80?'bar-warn':'bar-ok';
     const free=Math.max(0,tbl.seats-seated);
     const chips=sortArr(tbl.guests.map(gid=>hGuests.find(x=>x.id===gid)).filter(Boolean))
-      .map(g=>`<span class="chip">${esc(g.name)}<span class="chip-count">${g.count}</span><button class="chip-remove" onclick="removeFromTable(${tbl.id},${g.id})" title="Remove">×</button></span>`).join('');
+      .map(g=>`<span class="chip">${esc(g.name)}<span class="chip-count">${g.count}</span><button class="chip-remove" onclick="removeFromTable('${tbl.id}','${g.id}')" title="Remove">×</button></span>`).join('');
     const opts=availGuests.length
       ?availGuests.map(g=>`<option value="${g.id}">${esc(g.name)} (${g.count} ${Number(g.count)===1?'person':'people'})</option>`).join('')
       :`<option value="">No unassigned homecoming guests</option>`;
     return `<div class="table-card">
       <div class="tc-header">
         <div><div class="tc-title">${esc(tbl.name)}</div><div class="tc-meta">${seated} of ${tbl.seats} seats used · ${free} free</div></div>
-        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTable(${tbl.id})" title="Delete">
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTable('${tbl.id}')" title="Delete">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
         </button>
       </div>
@@ -649,13 +621,15 @@ function renderTables(){
       <div class="chips-wrap">${chips||'<span style="font-size:0.78rem;color:var(--text-light)">No guests assigned yet</span>'}</div>
       <div class="assign-row">
         <select id="asel-${tbl.id}"><option value="">— Select guest to assign —</option>${opts}</select>
-        <button class="btn btn-sage btn-sm" onclick="assignGuest(${tbl.id})">Assign</button>
+        <button class="btn btn-sage btn-sm" onclick="assignGuest('${tbl.id}')">Assign</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// ══ PDF / PRINT LAYOUT ENGINE ══
+// ══════════════════════════════════════════════
+// PDF / PRINT — pure HTML blob approach
+// ══════════════════════════════════════════════
 function buildPDFHtml(type){
   const now=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
   let title='',subtitle='',accentColor='',lightColor='';
@@ -777,6 +751,7 @@ function buildPDFHtml(type){
         }
         bodyHtml+='</div></div>';
       });
+      // Grand totals table
       bodyHtml+=`<div style="background:#FBF5E6;border:2px solid #C9A84C55;border-radius:8px;padding:14px 18px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-weight:700;color:#8A6B1E;font-size:0.95rem">Grand Total</span>
         <span style="font-weight:700;color:#8A6B1E;font-size:1rem">${totalSeats} seats · ${totalAssigned} assigned · ${Math.max(0,totalSeats-totalAssigned)} remaining</span>
@@ -802,7 +777,7 @@ function buildPDFHtml(type){
     .doc-sub{font-size:0.85rem;color:#888;margin-bottom:4px}
     .doc-date{font-size:0.78rem;color:#bbb}
     .header-divider{height:1px;background:#e8e4de;margin:20px 0 24px}
-    .print-btn-bar no-print{display:flex;gap:10px;margin-bottom:24px}
+    .print-btn-bar{display:flex;gap:10px;margin-bottom:24px}
     .print-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:20px;font-size:0.84rem;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;font-family:inherit}
     .btn-dl{background:${accentColor};color:#fff}
     .btn-dl:hover{opacity:0.88}
@@ -854,70 +829,21 @@ function printPDF(type){
   setTimeout(()=>{try{win.print();}catch(e){}},600);
 }
 
-// ══ CRITICAL KEYBOARD ENGINE PIPELINE ══
-// Wedding Form Navigation Flow
-document.getElementById('w-name').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    if (validateField('w-name', 'w-name-err')) {
-      document.getElementById('w-count').focus();
-    }
-  }
-});
-document.getElementById('w-count').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addGuest('wedding');
-  }
-});
+// ══ KEYBOARD & AUTO-CAP ══
+['w-name','w-count'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); addGuest('wedding');}}));
+['h-name','h-count'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); addGuest('homecoming');}}));
+['t-name','t-seats-input'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); addTable();}}));
 
-// Homecoming Form Navigation Flow
-document.getElementById('h-name').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    if (validateField('h-name', 'h-name-err')) {
-      document.getElementById('h-count').focus();
-    }
-  }
-});
-document.getElementById('h-count').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addGuest('homecoming');
-  }
-});
-
-// Table Arrangement Form Navigation Flow
-document.getElementById('t-name').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    if (validateField('t-name', 't-name-err')) {
-      document.getElementById('t-seats-input').focus();
-    }
-  }
-});
-document.getElementById('t-seats-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addTable();
-  }
-});
-
-// ══ AUTO-CAPITALIZATION AND VALIDATION RESET LISTENERS ══
 ['w-name','h-name','t-name'].forEach(id=>{
   const el=document.getElementById(id);
   el.addEventListener('input',()=>{if(el.value.length===1)el.value=el.value.toUpperCase();});
   el.addEventListener('blur',()=>{if(el.value.trim())el.value=capWords(el.value);});
 });
-
 document.getElementById('w-name').addEventListener('input',()=>clearError('w-name','w-name-err'));
-document.getElementById('w-count').addEventListener('input',()=>clearError('w-count','w-count-err'));
 document.getElementById('h-name').addEventListener('input',()=>clearError('h-name','h-name-err'));
-document.getElementById('h-count').addEventListener('input',()=>clearError('h-count','h-count-err'));
 document.getElementById('t-name').addEventListener('input',()=>clearError('t-name','t-name-err'));
-document.getElementById('t-seats-input').addEventListener('input',()=>clearError('t-seats-input','t-seats-err'));
 
-// ══ INITIALIZE ══
+// ══ INIT ══
 renderGuests('wedding');
 renderGuests('homecoming');
 </script>
