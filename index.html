@@ -64,16 +64,17 @@ nav{background:var(--white);border-bottom:1.5px solid var(--border);position:sti
 .icon-badge.lav{background:var(--lavender-light)}.icon-badge.lav svg{color:var(--lavender)}
 .icon-badge svg{width:15px;height:15px}
 
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:end}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:start}
 @media(max-width:520px){.form-row{grid-template-columns:1fr}}
 .fg{display:flex;flex-direction:column;gap:5px}
 .fg label{font-size:0.75rem;font-weight:600;color:var(--text-muted);letter-spacing:0.04em;text-transform:uppercase}
 .fg input,.fg select{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:0.9rem;font-family:inherit;background:var(--bg);color:var(--text);transition:border-color 0.15s,box-shadow 0.15s;width:100%}
 .fg input:focus,.fg select:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(232,160,160,0.2)}
-.fg input.error{border-color:#E87575;box-shadow:0 0 0 3px rgba(232,119,117,0.18)}
+.fg input.error,.fg input.error:focus{border-color:#E87575;box-shadow:0 0 0 3px rgba(232,119,117,0.18)}
 .fg input::placeholder{color:var(--text-light)}
-.field-error{font-size:0.75rem;color:#C0706F;margin-top:3px;display:none}
-.field-error.show{display:block}
+.field-error{font-size:0.75rem;color:#C0706F;margin-top:3px;display:none;align-items:center;gap:4px}
+.field-error.show{display:flex}
+.field-error::before{content:'!';background:#C0706F;color:#fff;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0}
 
 .form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 
@@ -96,6 +97,10 @@ nav{background:var(--white);border-bottom:1.5px solid var(--border);position:sti
 
 .actions-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;padding:1rem 1.25rem;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);align-items:center}
 .actions-bar-label{font-size:0.78rem;font-weight:600;color:var(--text-muted);letter-spacing:0.04em;text-transform:uppercase;margin-right:4px}
+
+/* Mobile PDF notice */
+.mobile-pdf-note{display:none;font-size:0.75rem;color:var(--text-muted);background:var(--gold-light);border:1px solid #E8D08A;border-radius:var(--radius-xs);padding:6px 10px;margin-top:6px;width:100%}
+@media(max-width:768px){.mobile-pdf-note{display:block}}
 
 .tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1.5px solid var(--border)}
 table{width:100%;border-collapse:collapse;font-size:0.875rem}
@@ -142,6 +147,10 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .assign-row select:focus{outline:none;border-color:var(--lavender);box-shadow:0 0 0 3px rgba(168,156,200,0.2)}
 .no-tables-msg{background:var(--white);border:1.5px dashed var(--border);border-radius:var(--radius);padding:2.5rem 1rem;text-align:center;color:var(--text-light);margin-top:.5rem}
 
+/* Shake animation for validation */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake 0.35s ease}
+
 @media(max-width:640px){
   .hamburger{display:flex;align-items:center}
   .nav-links{display:none;position:fixed;top:58px;left:0;right:0;background:var(--white);border-bottom:1.5px solid var(--border);flex-direction:column;padding:10px 14px 14px;gap:3px;box-shadow:0 8px 20px rgba(0,0,0,0.08);z-index:199}
@@ -155,8 +164,18 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .toast.t-error .ti{color:#E87575}
 .toast-icon{font-weight:700;font-size:1rem}
 
-/* ── PRINT PDF WINDOW STYLES ── */
-#pdf-frame{display:none}
+/* PDF viewer modal (mobile-friendly alternative) */
+.pdf-modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);align-items:flex-end;justify-content:center}
+.pdf-modal.open{display:flex}
+.pdf-modal-inner{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:1.5rem 1.5rem 2rem;width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,0.2)}
+.pdf-modal h3{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.pdf-modal p{font-size:0.83rem;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.5}
+.pdf-modal-actions{display:flex;flex-direction:column;gap:9px}
+.pdf-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);padding:4px}
+@media(min-width:641px){
+  .pdf-modal{align-items:center}
+  .pdf-modal-inner{border-radius:var(--radius);max-height:90vh;overflow-y:auto}
+}
 </style>
 </head>
 <body>
@@ -187,6 +206,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </nav>
 
+<!-- ── WEDDING PAGE ── -->
 <div class="page active" id="page-wedding">
   <div class="page-header wedding-bg">
     <h1>Wedding Guest List</h1>
@@ -200,14 +220,15 @@ tbody td{padding:10px 13px;vertical-align:middle}
     </div>
     <div class="actions-bar">
       <span class="actions-bar-label">Export</span>
-      <button class="btn btn-gold btn-sm" onclick="downloadPDF('wedding')">
+      <button class="btn btn-gold btn-sm" onclick="handleExport('wedding','download')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
         Download PDF
       </button>
-      <button class="btn btn-outline btn-sm" onclick="printPDF('wedding')">
+      <button class="btn btn-outline btn-sm" onclick="handleExport('wedding','print')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
         Print
       </button>
+      <div class="mobile-pdf-note">📱 On mobile: tap Download, then open the file in your browser and use Share → Print to save as PDF.</div>
     </div>
     <div class="card">
       <div class="card-title">
@@ -221,8 +242,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="w-name-err">Name is required</span>
         </div>
         <div class="fg">
-          <label>Number of People</label>
-          <input type="number" id="w-count" min="0" placeholder="Enter number"/>
+          <label>Number of People <span style="color:var(--rose-dark)">*</span></label>
+          <input type="number" id="w-count" min="1" placeholder="Enter number"/>
+          <span class="field-error" id="w-count-err">Count is required</span>
         </div>
       </div>
       <div class="form-actions">
@@ -245,6 +267,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- ── HOMECOMING PAGE ── -->
 <div class="page" id="page-homecoming">
   <div class="page-header homecoming-bg">
     <h1>Homecoming Guest List</h1>
@@ -258,14 +281,15 @@ tbody td{padding:10px 13px;vertical-align:middle}
     </div>
     <div class="actions-bar">
       <span class="actions-bar-label">Export</span>
-      <button class="btn btn-gold btn-sm" onclick="downloadPDF('homecoming')">
+      <button class="btn btn-gold btn-sm" onclick="handleExport('homecoming','download')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
         Download PDF
       </button>
-      <button class="btn btn-outline btn-sm" onclick="printPDF('homecoming')">
+      <button class="btn btn-outline btn-sm" onclick="handleExport('homecoming','print')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
         Print
       </button>
+      <div class="mobile-pdf-note">📱 On mobile: tap Download, then open the file in your browser and use Share → Print to save as PDF.</div>
     </div>
     <div class="card">
       <div class="card-title">
@@ -279,8 +303,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="h-name-err">Name is required</span>
         </div>
         <div class="fg">
-          <label>Number of People</label>
-          <input type="number" id="h-count" min="0" placeholder="Enter number"/>
+          <label>Number of People <span style="color:var(--rose-dark)">*</span></label>
+          <input type="number" id="h-count" min="1" placeholder="Enter number"/>
+          <span class="field-error" id="h-count-err">Count is required</span>
         </div>
       </div>
       <div class="form-actions">
@@ -303,6 +328,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- ── TABLE PLAN PAGE ── -->
 <div class="page" id="page-tables">
   <div class="page-header tables-bg">
     <h1>Table Seating Plan</h1>
@@ -318,14 +344,15 @@ tbody td{padding:10px 13px;vertical-align:middle}
     </div>
     <div class="actions-bar">
       <span class="actions-bar-label">Export</span>
-      <button class="btn btn-gold btn-sm" onclick="downloadPDF('tables')">
+      <button class="btn btn-gold btn-sm" onclick="handleExport('tables','download')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
         Download PDF
       </button>
-      <button class="btn btn-outline btn-sm" onclick="printPDF('tables')">
+      <button class="btn btn-outline btn-sm" onclick="handleExport('tables','print')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
         Print
       </button>
+      <div class="mobile-pdf-note">📱 On mobile: tap Download, then open the file in your browser and use Share → Print to save as PDF.</div>
     </div>
     <div class="card">
       <div class="card-title">
@@ -339,8 +366,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <span class="field-error" id="t-name-err">Table name is required</span>
         </div>
         <div class="fg">
-          <label>Number of Seats</label>
-          <input type="number" id="t-seats-input" min="0" placeholder="Enter number"/>
+          <label>Number of Seats <span style="color:var(--rose-dark)">*</span></label>
+          <input type="number" id="t-seats-input" min="1" placeholder="Enter number"/>
+          <span class="field-error" id="t-seats-err">Seat count is required</span>
         </div>
       </div>
       <div class="form-actions">
@@ -360,10 +388,20 @@ tbody td{padding:10px 13px;vertical-align:middle}
 
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon"></span><span id="toast-msg"></span></div>
 
+<!-- Mobile PDF modal (shown when popup blocked on mobile) -->
+<div class="pdf-modal" id="pdf-modal">
+  <div class="pdf-modal-inner" style="position:relative">
+    <button class="pdf-modal-close" onclick="closePdfModal()">×</button>
+    <h3 id="pdf-modal-title">Save as PDF</h3>
+    <p id="pdf-modal-msg">Your file is ready. Choose how to export it.</p>
+    <div class="pdf-modal-actions" id="pdf-modal-actions"></div>
+  </div>
+</div>
+
 <script>
 // ══ STATE ══
 const KW='wp_w3',KH='wp_h3',KT='wp_t3';
-let wGuests=[],hGuests=[],tables[];
+let wGuests=[],hGuests=[],tables=[];
 
 function load(){
   wGuests=JSON.parse(localStorage.getItem(KW)||'[]');
@@ -381,12 +419,11 @@ load();
 function capWords(s){return s.trim().split(/\s+/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sortArr(arr){return [...arr].sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'}))}
-function uid(){return 'id_' + Date.now() + '_' + Math.floor(Math.random()*99999)}
-function wTotal(){return wGuests.reduce((s,g)=>s+Number(g.count),0)}
-function hTotal(){return hGuests.reduce((s,g)=>s+Number(g.count),0)}
+function uid(){return 'id_'+Date.now()+'_'+Math.floor(Math.random()*99999)}
 function seatedInTable(tbl){return tbl.guests.reduce((s,gid)=>{const g=hGuests.find(x=>x.id===gid);return s+Number(g?g.count:0)},0)}
 function allSeats(){return tables.reduce((s,t)=>s+Number(t.seats),0)}
 function allAssigned(){return tables.reduce((s,t)=>s+seatedInTable(t),0)}
+function isMobile(){return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||window.innerWidth<768}
 
 // ══ NAV ══
 function navigate(page){
@@ -416,46 +453,84 @@ function toast(msg,type='success'){
 }
 
 // ══ VALIDATION ══
-function validateName(inputId,errId){
-  const el=document.getElementById(inputId);
-  const err=document.getElementById(errId);
-  const val=el.value.trim();
-  if(!val){
-    el.classList.add('error');
-    err.classList.add('show');
-    el.focus();
-    return false;
+// Returns true if BOTH name AND count are valid; shows errors on the wrong ones
+function validateFields(nameId, nameErrId, countId, countErrId) {
+  let ok = true;
+  const nameEl = document.getElementById(nameId);
+  const nameErr = document.getElementById(nameErrId);
+  const countEl = document.getElementById(countId);
+  const countErr = document.getElementById(countErrId);
+
+  // validate name
+  if (!nameEl.value.trim()) {
+    nameEl.classList.add('error');
+    nameErr.classList.add('show');
+    triggerShake(nameEl);
+    ok = false;
+  } else {
+    nameEl.classList.remove('error');
+    nameErr.classList.remove('show');
   }
-  el.classList.remove('error');
-  err.classList.remove('show');
-  return true;
+
+  // validate count (must be present and ≥ 1)
+  const countVal = parseInt(countEl.value);
+  if (!countEl.value.trim() || isNaN(countVal) || countVal < 1) {
+    countEl.classList.add('error');
+    countErr.classList.add('show');
+    triggerShake(countEl);
+    ok = false;
+  } else {
+    countEl.classList.remove('error');
+    countErr.classList.remove('show');
+  }
+
+  if (!ok) {
+    // focus the first invalid field
+    if (!nameEl.value.trim()) nameEl.focus();
+    else countEl.focus();
+  }
+  return ok;
 }
-function clearError(inputId,errId){
-  document.getElementById(inputId).classList.remove('error');
-  document.getElementById(errId).classList.remove('show');
+
+function triggerShake(el){
+  el.classList.remove('shake');
+  void el.offsetWidth; // reflow to restart
+  el.classList.add('shake');
+  el.addEventListener('animationend',()=>el.classList.remove('shake'),{once:true});
+}
+
+function clearError(inputId, errId){
+  const el = document.getElementById(inputId);
+  if(el){el.classList.remove('error');}
+  const err = document.getElementById(errId);
+  if(err){err.classList.remove('show');}
 }
 
 // ══ ADD GUEST ══
 function addGuest(event){
-  const isW=(event==='wedding');
-  const nameId=isW?'w-name':'h-name';
-  const errId=isW?'w-name-err':'h-name-err';
-  const cntId=isW?'w-count':'h-count';
-  if(!validateName(nameId,errId))return;
-  const nameEl=document.getElementById(nameId);
-  const cntEl=document.getElementById(cntId);
-  const name=capWords(nameEl.value);
-  const count=parseInt(cntEl.value)||0;
-  const list=isW?wGuests:hGuests;
-  list.push({id:uid(),name,count});
+  const isW = (event === 'wedding');
+  const nameId = isW ? 'w-name' : 'h-name';
+  const nameErrId = isW ? 'w-name-err' : 'h-name-err';
+  const countId = isW ? 'w-count' : 'h-count';
+  const countErrId = isW ? 'w-count-err' : 'h-count-err';
+
+  if(!validateFields(nameId, nameErrId, countId, countErrId)) return;
+
+  const nameEl = document.getElementById(nameId);
+  const countEl = document.getElementById(countId);
+  const name = capWords(nameEl.value);
+  const count = parseInt(countEl.value);
+  const list = isW ? wGuests : hGuests;
+  list.push({id:uid(), name, count});
   save();
-  nameEl.value='';cntEl.value='';
+  nameEl.value = '';
+  countEl.value = '';
   renderGuests(event);
-  toast(name+' added');
+  toast(name + ' added');
 }
 
 // ══ DELETE GUEST ══
-function deleteGuest(event,id){
+function deleteGuest(event, id){
   if(event==='wedding'){
     wGuests=wGuests.filter(g=>g.id!==id);
   } else {
@@ -464,54 +539,54 @@ function deleteGuest(event,id){
   }
   save();
   renderGuests(event);
-  if(event==='homecoming')renderTables();
+  if(event==='homecoming') renderTables();
   toast('Removed');
 }
 
 // ══ EDIT COUNT ══
-function startEdit(event,id){
-  const list=event==='wedding'?wGuests:hGuests;
-  const g=list.find(x=>x.id===id);if(!g)return;
+function startEdit(event, id){
+  const list = event==='wedding' ? wGuests : hGuests;
+  const g = list.find(x=>x.id===id); if(!g) return;
   document.getElementById('disp-'+id).style.display='none';
-  const inp=document.getElementById('inp-'+id);
-  inp.style.display='inline-block';inp.value=g.count;inp.focus();inp.select();
+  const inp = document.getElementById('inp-'+id);
+  inp.style.display='inline-block'; inp.value=g.count; inp.focus(); inp.select();
   document.getElementById('btns-'+id).classList.add('visible');
   document.getElementById('edit-btn-'+id).style.display='none';
 }
-function saveEdit(event,id){
-  const inp=document.getElementById('inp-'+id);
-  const newCount=parseInt(inp.value)||0;
-  const list=event==='wedding'?wGuests:hGuests;
-  const g=list.find(x=>x.id===id);if(!g)return;
-  g.count=newCount;
+function saveEdit(event, id){
+  const inp = document.getElementById('inp-'+id);
+  const newCount = parseInt(inp.value)||0;
+  const list = event==='wedding' ? wGuests : hGuests;
+  const g = list.find(x=>x.id===id); if(!g) return;
+  g.count = newCount;
   if(event==='homecoming'){
-    const tbl=tables.find(t=>t.guests.includes(id));
-    if(tbl&&seatedInTable(tbl)>tbl.seats){
+    const tbl = tables.find(t=>t.guests.includes(id));
+    if(tbl && seatedInTable(tbl)>tbl.seats){
       toast('Warning: "'+tbl.name+'" now exceeds seat capacity!','error');
     }
   }
   save();
   renderGuests(event);
-  if(event==='homecoming')renderTables();
+  if(event==='homecoming') renderTables();
   toast('Count updated to '+newCount);
 }
-function cancelEdit(event,id){renderGuests(event);}
+function cancelEdit(event, id){ renderGuests(event); }
 
 // ══ RENDER GUESTS ══
 function renderGuests(event){
-  const isW=(event==='wedding');
-  const raw=isW?wGuests:hGuests;
-  const sorted=sortArr(raw);
-  const tbody=document.getElementById(isW?'wedding-tbody':'homecoming-tbody');
-  const total=raw.reduce((s,g)=>s+Number(g.count),0);
+  const isW = (event==='wedding');
+  const raw = isW ? wGuests : hGuests;
+  const sorted = sortArr(raw);
+  const tbody = document.getElementById(isW?'wedding-tbody':'homecoming-tbody');
+  const total = raw.reduce((s,g)=>s+Number(g.count),0);
   document.getElementById(isW?'w-groups':'h-groups').textContent=raw.length;
   document.getElementById(isW?'w-total':'h-total').textContent=total;
   if(sorted.length===0){
     tbody.innerHTML='<tr><td colspan="5"><div class="no-data"><svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>No guests added yet</p></div></td></tr>';
     return;
   }
-  const bc=isW?'badge-rose':'badge-sage';
-  tbody.innerHTML=sorted.map((g,i)=>{
+  const bc = isW ? 'badge-rose' : 'badge-sage';
+  tbody.innerHTML = sorted.map((g,i)=>{
     let tblBadge='';
     if(!isW){const t=tables.find(tb=>tb.guests.includes(g.id));if(t)tblBadge=` <span class="badge badge-gold" style="font-size:0.68rem;padding:2px 7px">${esc(t.name)}</span>`;}
     return `<tr>
@@ -520,7 +595,7 @@ function renderGuests(event){
       <td><div class="count-cell">
         <span class="badge ${bc}" id="disp-${g.id}">${g.count}</span>
         <input class="count-edit" type="number" min="0" id="inp-${g.id}" value="${g.count}"
-          onkeydown="if(event.key==='Enter'){event.preventDefault(); saveEdit('${event}','${g.id}');} if(event.key==='Escape'){event.preventDefault(); cancelEdit('${event}','${g.id}');}"/>
+          onkeydown="if(event.key==='Enter'){event.preventDefault();saveEdit('${event}','${g.id}');}if(event.key==='Escape'){event.preventDefault();cancelEdit('${event}','${g.id}');}"/>
       </div></td>
       <td><div style="display:flex;gap:5px;align-items:center">
         <button class="btn btn-outline btn-sm" onclick="startEdit('${event}','${g.id}')" id="edit-btn-${g.id}">
@@ -541,14 +616,14 @@ function renderGuests(event){
 
 // ══ ADD TABLE ══
 function addTable(){
-  if(!validateName('t-name','t-name-err'))return;
-  const nameEl=document.getElementById('t-name');
-  const seatsEl=document.getElementById('t-seats-input');
-  const name=capWords(nameEl.value);
-  const seats=parseInt(seatsEl.value)||0;
-  tables.push({id:uid(),name,seats,guests:[]});
+  if(!validateFields('t-name','t-name-err','t-seats-input','t-seats-err')) return;
+  const nameEl = document.getElementById('t-name');
+  const seatsEl = document.getElementById('t-seats-input');
+  const name = capWords(nameEl.value);
+  const seats = parseInt(seatsEl.value);
+  tables.push({id:uid(), name, seats, guests:[]});
   save();
-  nameEl.value='';seatsEl.value='';
+  nameEl.value=''; seatsEl.value='';
   renderTables();
   toast(name+' added');
 }
@@ -556,7 +631,7 @@ function addTable(){
 // ══ DELETE TABLE ══
 function deleteTable(id){
   tables=tables.filter(t=>t.id!==id);
-  save();renderTables();toast('Table removed');
+  save(); renderTables(); toast('Table removed');
 }
 
 // ══ ASSIGN GUEST ══
@@ -573,15 +648,15 @@ function assignGuest(tableId){
     toast('Not enough seats! Need '+guest.count+', only '+(tbl.seats-seated)+' free','error');return;
   }
   tbl.guests.push(gid);
-  save();renderTables();renderGuests('homecoming');
+  save(); renderTables(); renderGuests('homecoming');
   toast(guest.name+' assigned to '+tbl.name);
 }
 
 // ══ REMOVE FROM TABLE ══
-function removeFromTable(tableId,guestId){
+function removeFromTable(tableId, guestId){
   const tbl=tables.find(t=>t.id===tableId);if(!tbl)return;
   tbl.guests=tbl.guests.filter(g=>g!==guestId);
-  save();renderTables();renderGuests('homecoming');toast('Guest removed from table');
+  save(); renderTables(); renderGuests('homecoming'); toast('Guest removed from table');
 }
 
 // ══ RENDER TABLES ══
@@ -627,9 +702,7 @@ function renderTables(){
   }).join('');
 }
 
-// ══════════════════════════════════════════════
-// PDF / PRINT — pure HTML blob approach
-// ══════════════════════════════════════════════
+// ══ PDF GENERATION ══
 function buildPDFHtml(type){
   const now=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
   let title='',subtitle='',accentColor='',lightColor='';
@@ -686,20 +759,20 @@ function buildPDFHtml(type){
     const totalSeats=allSeats();
     const totalAssigned=allAssigned();
     const sortedTables=sortArr(tables);
-    bodyHtml+=`<div style="display:flex;gap:12px;margin-bottom:24px">
-      <div style="flex:1;background:#FBF5E6;border-radius:8px;padding:14px;text-align:center;border:1px solid #C9A84C44">
+    bodyHtml+=`<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:80px;background:#FBF5E6;border-radius:8px;padding:14px;text-align:center;border:1px solid #C9A84C44">
         <div style="font-size:1.8rem;font-weight:700;color:#8A6B1E">${tables.length}</div>
         <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:#888;margin-top:3px">Tables</div>
       </div>
-      <div style="flex:1;background:#FBF5E6;border-radius:8px;padding:14px;text-align:center;border:1px solid #C9A84C44">
+      <div style="flex:1;min-width:80px;background:#FBF5E6;border-radius:8px;padding:14px;text-align:center;border:1px solid #C9A84C44">
         <div style="font-size:1.8rem;font-weight:700;color:#8A6B1E">${totalSeats}</div>
         <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:#888;margin-top:3px">Total Seats</div>
       </div>
-      <div style="flex:1;background:#EFF6F2;border-radius:8px;padding:14px;text-align:center;border:1px solid #5A8C7844">
+      <div style="flex:1;min-width:80px;background:#EFF6F2;border-radius:8px;padding:14px;text-align:center;border:1px solid #5A8C7844">
         <div style="font-size:1.8rem;font-weight:700;color:#5A8C78">${totalAssigned}</div>
         <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:#888;margin-top:3px">Assigned</div>
       </div>
-      <div style="flex:1;background:#FDF0F0;border-radius:8px;padding:14px;text-align:center;border:1px solid #C0706F44">
+      <div style="flex:1;min-width:80px;background:#FDF0F0;border-radius:8px;padding:14px;text-align:center;border:1px solid #C0706F44">
         <div style="font-size:1.8rem;font-weight:700;color:#C0706F">${Math.max(0,totalSeats-totalAssigned)}</div>
         <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:#888;margin-top:3px">Available</div>
       </div>
@@ -751,39 +824,39 @@ function buildPDFHtml(type){
         }
         bodyHtml+='</div></div>';
       });
-      // Grand totals table
-      bodyHtml+=`<div style="background:#FBF5E6;border:2px solid #C9A84C55;border-radius:8px;padding:14px 18px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+      bodyHtml+=`<div style="background:#FBF5E6;border:2px solid #C9A84C55;border-radius:8px;padding:14px 18px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-weight:700;color:#8A6B1E;font-size:0.95rem">Grand Total</span>
         <span style="font-weight:700;color:#8A6B1E;font-size:1rem">${totalSeats} seats · ${totalAssigned} assigned · ${Math.max(0,totalSeats-totalAssigned)} remaining</span>
       </div>`;
     }
   }
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>${esc(title)}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#2A2A2A;padding:0}
     @media print{
-      @page{margin:15mm 18mm;size:A4}
+      @page{margin:12mm 14mm;size:A4}
       body{padding:0}
       .no-print{display:none!important}
       table{page-break-inside:auto}
       tr{page-break-inside:avoid}
     }
-    .page-wrap{max-width:720px;margin:0 auto;padding:28px 24px}
-    .header-bar{background:${accentColor};height:5px;margin:-28px -24px 24px}
+    .page-wrap{max-width:720px;margin:0 auto;padding:24px 20px}
+    .header-bar{background:${accentColor};height:5px;margin:-24px -20px 24px}
     .doc-title{font-size:1.75rem;font-weight:700;color:#2A2A2A;margin-bottom:4px}
     .doc-sub{font-size:0.85rem;color:#888;margin-bottom:4px}
     .doc-date{font-size:0.78rem;color:#bbb}
     .header-divider{height:1px;background:#e8e4de;margin:20px 0 24px}
-    .print-btn-bar{display:flex;gap:10px;margin-bottom:24px}
-    .print-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:20px;font-size:0.84rem;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;font-family:inherit}
+    .action-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+    .btn-action{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:22px;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;font-family:inherit;text-decoration:none}
     .btn-dl{background:${accentColor};color:#fff}
     .btn-dl:hover{opacity:0.88}
     .btn-pr{background:#f5f5f3;color:#444;border:1.5px solid #e0ddd8}
     .btn-pr:hover{background:#ede9e3}
-    .footer{margin-top:32px;padding-top:14px;border-top:1px solid #e8e4de;font-size:0.75rem;color:#bbb;display:flex;justify-content:space-between}
+    .tip{font-size:0.75rem;color:#aaa;margin-top:8px;line-height:1.5}
+    .footer{margin-top:32px;padding-top:14px;border-top:1px solid #e8e4de;font-size:0.75rem;color:#bbb;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
   </style>
   </head><body>
   <div class="page-wrap">
@@ -792,56 +865,138 @@ function buildPDFHtml(type){
     <div class="doc-sub">${esc(subtitle)}</div>
     <div class="doc-date">Generated: ${now}</div>
     <div class="header-divider"></div>
-    <div class="print-btn-bar no-print">
-      <button class="print-btn btn-dl" onclick="window.print()">&#8595; Save / Print as PDF</button>
-      <button class="print-btn btn-pr" onclick="window.close()">Close</button>
+    <div class="action-bar no-print">
+      <button class="btn-action btn-dl" onclick="window.print()">&#8595; Save as PDF / Print</button>
+      <button class="btn-action btn-pr" onclick="window.close()">Close</button>
     </div>
+    <p class="tip no-print">💡 To save as PDF: click "Save as PDF / Print" above, then choose "Save as PDF" as the destination in the print dialog.</p>
     ${bodyHtml}
     <div class="footer"><span>Wedding Planner &nbsp;·&nbsp; ${esc(title)}</span><span>${now}</span></div>
   </div>
   </body></html>`;
 }
 
-function downloadPDF(type){
-  const html=buildPDFHtml(type);
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const names={wedding:'Wedding_Guest_List',homecoming:'Homecoming_Guest_List',tables:'Table_Seating_Plan'};
-  const date=new Date().toISOString().slice(0,10);
-  a.href=url;
-  a.download=names[type]+'_'+date+'.html';
+// ══ EXPORT HANDLER (desktop + mobile) ══
+let _pendingExport = null; // {type, action}
+
+function handleExport(type, action){
+  // Always trigger download (works on all devices)
+  if(action === 'download'){
+    triggerDownload(type);
+    return;
+  }
+  // Print: try popup; on mobile show modal guide instead
+  if(action === 'print'){
+    if(isMobile()){
+      showPdfModal(type);
+    } else {
+      openPrintWindow(type);
+    }
+  }
+}
+
+function triggerDownload(type){
+  const html = buildPDFHtml(type);
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const names = {wedding:'Wedding_Guest_List', homecoming:'Homecoming_Guest_List', tables:'Table_Seating_Plan'};
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = names[type]+'_'+date+'.html';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
-  toast('File downloaded — open it and use "Save as PDF" or Print');
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+  toast('Downloaded! Open the file in your browser, then print/save as PDF.');
 }
 
-function printPDF(type){
-  const html=buildPDFHtml(type);
-  const win=window.open('','_blank','width=800,height=700,scrollbars=yes,resizable=yes');
-  if(!win){toast('Pop-up blocked. Please allow pop-ups for this site.','error');return;}
+function openPrintWindow(type){
+  const html = buildPDFHtml(type);
+  const win = window.open('','_blank','width=820,height=700,scrollbars=yes,resizable=yes');
+  if(!win){
+    // Popup blocked — fall back to download + modal
+    showPdfModal(type, true);
+    return;
+  }
   win.document.open();
   win.document.write(html);
   win.document.close();
   win.focus();
-  setTimeout(()=>{try{win.print();}catch(e){}},600);
+  setTimeout(()=>{try{win.print();}catch(e){}}, 650);
 }
 
-// ══ KEYBOARD & AUTO-CAP ══
-['w-name','w-count'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); addGuest('wedding');}}));
-['h-name','h-count'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); addGuest('homecoming');}}));
-['t-name','t-seats-input'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); addTable();}}));
+function showPdfModal(type, popupBlocked){
+  const modal = document.getElementById('pdf-modal');
+  const title = document.getElementById('pdf-modal-title');
+  const msg = document.getElementById('pdf-modal-msg');
+  const actions = document.getElementById('pdf-modal-actions');
 
-['w-name','h-name','t-name'].forEach(id=>{
-  const el=document.getElementById(id);
-  el.addEventListener('input',()=>{if(el.value.length===1)el.value=el.value.toUpperCase();});
-  el.addEventListener('blur',()=>{if(el.value.trim())el.value=capWords(el.value);});
+  const names = {wedding:'Wedding Guest List', homecoming:'Homecoming Guest List', tables:'Table Seating Plan'};
+  title.textContent = 'Save "'+names[type]+'" as PDF';
+
+  if(popupBlocked){
+    msg.textContent = 'Pop-ups are blocked. Download the file and open it in your browser, then use Print → Save as PDF.';
+  } else {
+    msg.textContent = 'On mobile, download the file and open it in your browser. Then use Share → Print (iOS) or the menu → Print (Android) to save as PDF.';
+  }
+
+  actions.innerHTML = `
+    <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="triggerDownload('${type}');closePdfModal()">
+      ⬇ Download HTML File
+    </button>
+    <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="closePdfModal()">
+      Cancel
+    </button>`;
+
+  modal.classList.add('open');
+}
+
+function closePdfModal(){
+  document.getElementById('pdf-modal').classList.remove('open');
+}
+
+// Close modal on backdrop click
+document.getElementById('pdf-modal').addEventListener('click',function(e){
+  if(e.target===this) closePdfModal();
 });
-document.getElementById('w-name').addEventListener('input',()=>clearError('w-name','w-name-err'));
-document.getElementById('h-name').addEventListener('input',()=>clearError('h-name','h-name-err'));
-document.getElementById('t-name').addEventListener('input',()=>clearError('t-name','t-name-err'));
+
+// ══ KEYBOARD & AUTO-CAP ══
+['w-name','w-count'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addGuest('wedding');}});
+});
+['h-name','h-count'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addGuest('homecoming');}});
+});
+['t-name','t-seats-input'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTable();}});
+});
+
+// Auto-capitalize & clear errors
+[
+  ['w-name','w-name-err'],
+  ['h-name','h-name-err'],
+  ['t-name','t-name-err']
+].forEach(([id,errId])=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input',()=>{
+    if(el.value.length===1) el.value=el.value.toUpperCase();
+    clearError(id, errId);
+  });
+  el.addEventListener('blur',()=>{
+    if(el.value.trim()) el.value=capWords(el.value);
+  });
+});
+
+// Clear count errors on input
+[['w-count','w-count-err'],['h-count','h-count-err'],['t-seats-input','t-seats-err']].forEach(([id,errId])=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input',()=>clearError(id, errId));
+});
 
 // ══ INIT ══
 renderGuests('wedding');
